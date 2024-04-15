@@ -95,11 +95,50 @@ int gatorgit_add(const char* filename) {
  */
 
 int gatorgit_rm(const char* filename) {
-  
-  /* TODO: Your code here */
+
+
+    FILE* findex = fopen(".gatorgit/.index", "r");
+      if (findex == NULL) {
+      fprintf(stderr, "$ gatorgit rm FILE_THAT_IS_NOT_TRACKED.txt\n");
+      fprintf(stderr, "ERROR: File <filename> not tracked\n");
+      return 1;
+    }
+
+
+    FILE* fnewindex = fopen(".gatorgit/.newindex", "w");
+     if (fnewindex == NULL) {
+        fprintf(stderr, "$ gatorgit rm FILE_THAT_IS_NOT_TRACKED.txt\n");
+        fprintf(stderr, "ERROR: File <filename> not tracked\n");
+        fclose(findex);
+        return 1;
+    }
+
+  int stringCheck  = 0;
+  char line[FILENAME_SIZE];
+  while (fgets(line, sizeof(line), findex)) {
+
+      //Remove newline character if present
+      strtok(line, "\n");
+      if(strcmp(line, filename) == 0){
+        stringCheck = 1;
+        continue;
+
+      }
+
+    fprintf(fnewindex, "%s\n", line);
+  }
+  fclose(findex);
+  fclose(fnewindex);
+
+  if(!stringCheck){
+      fs_rm(".gatorgit/.newindex");
+      return 1;
+  }
+
+  fs_mv(".gatorgit/.newindex", ".gatorgit/.index");
 
   return 0;
-  
+
 }
 
 /* gatorgit commit -m <msg>
@@ -111,12 +150,30 @@ int gatorgit_rm(const char* filename) {
 const char* go_gator = "GOLDEN GATOR!";
 
 int is_commit_msg_ok(const char* msg) {
-  /* TODO: Your code here  */
-  return 0;
+  const char* p = msg;
+  const char* q = go_gator;
+
+  while (*p != '\0') {
+    if (*p == *q) {
+      const char* temp_p = p;
+      const char* temp_q = q;
+      while (*temp_p != '\0' && *temp_q != '\0' && *temp_p == *temp_q) {
+        temp_p++;
+        temp_q++;
+      }
+      if (*temp_q == '\0') {
+        return 1; // "GOLDEN GATOR" found
+      }
+    }
+    p++;
+  }
+  return 0; // "GOLDEN GATOR" not found
+  
 }
 
 void next_commit_id(char* commit_id) {
   /* TODO: Your code here */
+  //csc256 +1
 }
 
 int gatorgit_commit(const char* msg) {
@@ -135,7 +192,27 @@ int gatorgit_commit(const char* msg) {
 }
 
 int gatorgit_status() {
-  /* YOUR CODE HERE */
+  int trackedFiles = 0;
+  FILE* findex = fopen(".gatorgit/.index", "r"); //read
+if (findex == NULL) {
+  fprintf(stderr, "ERROR: gatorgit init has not been initialized.\n");
+  return 1;
+}
 
+//Printing Tracked Files
+  fprintf(stdout, "Tracked Files: \n\n");
+
+char line[FILENAME_SIZE];
+while (fgets(line, sizeof(line), findex)) {
+
+//Segments each line and prints
+strtok(line, "\n");
+printf("  %s\n", line);
+trackedFiles++;
+}
+
+fclose(findex);
+
+fprintf(stdout, "\n%d files total \n", trackedFiles);
   return 0;
 }
